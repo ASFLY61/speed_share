@@ -30,7 +30,7 @@ def keystoreProperties = new Properties()
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 // end
 android {
-    compileSdkVersion 31
+    compileSdkVersion 34
 
     sourceSets {
     }
@@ -39,7 +39,7 @@ android {
     }
     defaultConfig {
         applicationId "com.nightmare.speedshare"
-        minSdkVersion 20
+        minSdkVersion 21
         targetSdkVersion 28
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName

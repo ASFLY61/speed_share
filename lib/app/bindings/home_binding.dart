@@ -1,13 +1,11 @@
 import 'package:get/get.dart';
-import 'package:speed_share/app/controller/chat_controller.dart';
-import 'package:speed_share/app/controller/online_controller.dart';
-import 'package:speed_share/app/controller/setting_controller.dart';
+import 'package:speed_share/app/controller/controller.dart';
 
 class HomeBinding extends Bindings {
   @override
   void dependencies() {
     Get.put(SettingController());
-    Get.put(OnlineController());
-    Get.put(ChatController());
+    Get.put(FileController());
+    Get.put(DownloadController());
   }
 }

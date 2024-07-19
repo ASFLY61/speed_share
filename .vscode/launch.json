@@ -1,20 +1,16 @@
 {
-    // 使用 IntelliSense 了解相关属性。 
-    // 悬停以查看现有属性的描述。
-    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [{
-            "name": "Linux",
-            "request": "launch",
-            "type": "dart",
-            "deviceId": "linux"
-        },
+    "configurations": [
         {
-            "name": "Chrome",
-            "request": "launch",
+            "name": "Web",
             "type": "dart",
+            "request": "launch",
+            "program": "lib/main.dart",
             "deviceId": "chrome",
-            "args": ["--web-renderer","html"]
+            "toolArgs": [
+                "--web-renderer",
+                "html",
+            ],
         },
         {
             "name": "Mac Desktop",
@@ -29,28 +25,22 @@
             "deviceId": "windows"
         },
         {
-            "name": "平板",
+            "name": "Linux",
             "request": "launch",
             "type": "dart",
-            "deviceId": "M2105K81AC"
+            "deviceId": "linux"
         },
         {
-            "name": "小米10",
+            "name": "小米14",
             "request": "launch",
             "type": "dart",
-            "deviceId": "Mi 10"
+            "deviceId": "23127PN0CC",
         },
         {
-            "name": "小米10s",
+            "name": "魅族21",
             "request": "launch",
             "type": "dart",
-            "deviceId": "M2102J2SC"
-        },
-        {
-            "name": "红米K30",
-            "request": "launch",
-            "type": "dart",
-            "deviceId": "Redmi K30"
+            "deviceId": "MEIZU 21",
         },
     ]
 }

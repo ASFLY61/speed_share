@@ -1,100 +1,133 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:get/get.dart';
+import 'package:get/get.dart' hide Response;
 import 'package:global_repository/global_repository.dart';
-import 'package:speed_share/pages/home_page.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:settings/settings.dart';
+import 'package:speed_share/app/controller/chat_controller.dart';
+import 'package:speed_share/app/controller/setting_controller.dart';
+import 'package:speed_share_extension/speed_share_extension.dart';
 import 'package:window_manager/window_manager.dart';
-import 'app/routes/app_pages.dart';
+import 'android_window.dart';
+import 'app/controller/device_controller.dart';
 import 'config/config.dart';
 import 'global/global.dart';
-import 'themes/default_theme_data.dart';
+import 'material_app_entry_point.dart';
+import 'package:file_manager_view/file_manager_view.dart' as fm;
+import 'dart:async';
+import 'generated/intl/messages_en.dart' as en;
+import 'generated/intl/messages_zh_CN.dart' as zh;
+
+// 初始化hive的设置
+Future<void> initSetting() async {
+  String path;
+  if (GetPlatform.isIOS) {
+    path = (await getApplicationDocumentsDirectory()).path;
+  } else {
+    path = RuntimeEnvir.configPath;
+  }
+  await initSettingStore(path);
+}
+
+@pragma('vm:entry-point')
+Future<void> androidWindow() async {
+  Log.defaultLogger.level = LogLevel.error;
+  Log.d("androidWindow");
+  Log.v("androidWindow");
+  Log.w("androidWindow");
+  Log.e("androidWindow");
+  Log.i("androidWindow");
+  if (!GetPlatform.isWeb && !GetPlatform.isIOS) {
+    WidgetsFlutterBinding.ensureInitialized();
+    // 拿到应用程序路径
+    // get app directory
+    final dir = (await getApplicationSupportDirectory()).path;
+    RuntimeEnvir.initEnvirWithPackageName(
+      Config.packageName,
+      appSupportDirectory: dir,
+    );
+    // 启动文件服务器
+    // start file manager server
+    fm.Server.start();
+  }
+  if (!GetPlatform.isWeb) {
+    await initSetting();
+  }
+  Get.put(SettingController());
+  Get.put(DeviceController());
+  Get.put(ChatController());
+
+  pop = true;
+  runApp(const AndroidWindowApp());
+  StatusBarUtil.transparent();
+}
+
+bool pop = false;
 
 Future<void> main() async {
-  if (!GetPlatform.isWeb && !GetPlatform.isIOS) {
-    RuntimeEnvir.initEnvirWithPackageName(Config.packageName);
-  }
-  runApp(const SpeedShare());
-  if (GetPlatform.isDesktop) {
-    WidgetsFlutterBinding.ensureInitialized();
-    await windowManager.ensureInitialized();
-    windowManager.waitUntilReadyToShow().then((_) async {
-      // Hide window title bar
-      // await windowManager.setTitleBarStyle('hidden');
-      await windowManager.setSize(const Size(500, 300));
-      await windowManager.show();
-      // await windowManager.setSkipTaskbar(false);
-    });
-  }
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarDividerColor: Colors.transparent,
-    ),
-  );
-  // 物理平台使用的udp设备互相发现
-  Global().initGlobal();
-}
-
-class SpeedShare extends StatelessWidget {
-  const SpeedShare({Key key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    String initRoute = SpeedPages.initial;
-    if (GetPlatform.isWeb) {
-      initRoute = Routes.chat;
-    }
-    return NiToastNew(
-      child: OrientationBuilder(
-        builder: (_, Orientation orientation) {
-          return GetMaterialApp(
-            enableLog: false,
-            locale: const Locale('zh', 'CN'),
-            title: '速享',
-            initialRoute: initRoute,
-            getPages: SpeedPages.routes,
-            defaultTransition: Transition.fadeIn,
-            debugShowCheckedModeBanner: false,
-            builder: (context, child) {
-              Log.i(Get.locale);
-              if (orientation == Orientation.landscape) {
-                ScreenAdapter.init(896);
-              } else {
-                ScreenAdapter.init(414);
-              }
-              final bool isDark =
-                  Theme.of(context).brightness == Brightness.dark;
-              final ThemeData theme =
-                  isDark ? DefaultThemeData.dark() : DefaultThemeData.light();
-              return Theme(
-                data: theme,
-                child: child,
-              );
-            },
-          );
+  runZonedGuarded<void>(
+    () async {
+      if (!GetPlatform.isWeb) {
+        WidgetsFlutterBinding.ensureInitialized();
+        // 拿到应用程序路径
+        // get app directory
+        final dir = (await getApplicationSupportDirectory()).path;
+        RuntimeEnvir.initEnvirWithPackageName(
+          Config.packageName,
+          appSupportDirectory: dir,
+        );
+        // 启动文件服务器
+        // start file manager server
+        // todo 肯呢个需要更改成127.0.0.1
+        fm.Server.start();
+      }
+      Get.config(
+        enableLog: false,
+        logWriterCallback: (text, {isError = false}) {
+          // Log.d(text, tag: 'GetX');
         },
-      ),
-    );
-  }
+      );
+      if (!GetPlatform.isWeb) {
+        await initSetting();
+      }
+      Get.put(SettingController());
+      Get.put(DeviceController());
+      Get.put(ChatController());
+      WidgetsFlutterBinding.ensureInitialized();
+      if (!GetPlatform.isIOS) {
+        String dir;
+        if (!GetPlatform.isWeb) {
+          dir = (await getApplicationSupportDirectory()).path;
+          RuntimeEnvir.initEnvirWithPackageName(
+            Config.packageName,
+            appSupportDirectory: dir,
+          );
+        }
+      }
+      initPersonal();
+      runApp(const SpeedShare());
+      mergeI18n();
+      // 透明状态栏
+      // transparent the appbar
+      StatusBarUtil.transparent();
+
+      FlutterError.onError = (FlutterErrorDetails details) {
+        FlutterError.presentError(details);
+        Log.e('页面构建异常 : ${details.exception}');
+      };
+      if (GetPlatform.isDesktop) {
+        if (!GetPlatform.isWeb) {
+          await windowManager.ensureInitialized();
+        }
+      }
+      Global().initGlobal();
+    },
+    (error, stackTrace) {
+      Log.e('未捕捉到的异常 : $error \n$stackTrace');
+    },
+  );
 }
 
-class SpeedShareEntryPoint extends StatefulWidget {
-  SpeedShareEntryPoint({Key key}) : super(key: key) {
-    if (RuntimeEnvir.packageName != Config.packageName &&
-        !GetPlatform.isDesktop) {
-      // 如果这个项目是独立运行的，那么RuntimeEnvir.packageName会在main函数中被设置成Config.packageName
-      // 这个 if 就不会走到，如果是被其他的项目依赖，RuntimeEnvir.packageName就会是对应的主仓库的包名
-      Config.flutterPackage = 'packages/speed_share/';
-    }
-  }
-  @override
-  _SpeedShareEntryPointState createState() => _SpeedShareEntryPointState();
-}
-
-class _SpeedShareEntryPointState extends State<SpeedShareEntryPoint> {
-  @override
-  Widget build(BuildContext context) {
-    return const HomePage();
-  }
+void mergeI18n() {
+  en.messages.messages.addAll(enMessage);
+  zh.messages.messages.addAll(zhCNMessage);
 }
